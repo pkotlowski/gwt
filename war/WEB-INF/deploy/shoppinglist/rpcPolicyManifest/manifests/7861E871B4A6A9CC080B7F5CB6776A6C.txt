@@ -1,0 +1,2 @@
+serviceClass: shopping.client.GreetingService
+path: 27374E0084BA1DC41311258F83E52EE1.gwt.rpc

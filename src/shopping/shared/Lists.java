@@ -1,15 +1,29 @@
 package shopping.shared;
 
-import java.text.DateFormat;
-
-import org.apache.james.mime4j.field.datetime.DateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Lists {
 	public Long id;
 	public String name;
 	public String creationDate;
+	public List<Item> itemList = new ArrayList<Item>();
 	
+	public List getAllItems(){
+		return itemList;
+	}
+	public void addItemToList(Item item){
+		itemList.add(item);
+		System.out.println(item.id+" "+item.listId);
+	}
 	
+	public List<Item> getItemList() {
+		return itemList;
+	}
+	/*Getters and setters*/
+	public void setItemList(List<Item> itemList) {
+		this.itemList = itemList;
+	}
 	public Long getId() {
 		return id;
 	}

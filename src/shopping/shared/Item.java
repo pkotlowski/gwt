@@ -1,8 +1,23 @@
 package shopping.shared;
 
 public class Item {
+	public Long id;
+	public Long listId;
 	public String name;
 	public Double quantity;
+	
+	public Long getListId() {
+		return listId;
+	}
+	public void setListId(Long listId) {
+		this.listId = listId;
+	}
+	public Long getId() {
+		return id;
+	}
+	public void setId(Long id) {
+		this.id = id;
+	}
 	public String getName() {
 		return name;
 	}

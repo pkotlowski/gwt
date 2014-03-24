@@ -17,5 +17,10 @@ public class StorageService {
 		System.out.println("XXX "+db.size());
 		return db;
 	}
+	public void modifyList(Lists lists){
+		Lists tmpList = lists;
+		db.remove(lists);
+		tmpList.itemList.add(null);
+	}
 	
 }

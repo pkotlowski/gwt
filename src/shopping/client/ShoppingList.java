@@ -4,6 +4,7 @@ import java.text.DateFormat;
 import java.util.Date;
 
 import shopping.shared.FieldVerifier;
+import shopping.shared.Item;
 import shopping.shared.Lists;
 import shopping.shared.StorageService;
 import sun.io.Converters;
@@ -31,32 +32,26 @@ import com.google.gwt.user.client.ui.SplitLayoutPanel;
 import com.google.gwt.user.client.ui.TextBox;
 import com.google.gwt.user.client.ui.VerticalPanel;
 import com.google.gwt.view.client.ListDataProvider;
+import com.google.gwt.view.client.SelectionChangeEvent;
+import com.google.gwt.view.client.SelectionChangeEvent.Handler;
+import com.google.gwt.view.client.SelectionModel;
+import com.google.gwt.view.client.SingleSelectionModel;
 import com.ibm.icu.text.SimpleDateFormat;
 
 /**
  * Entry point classes define <code>onModuleLoad()</code>.
  */
 public class ShoppingList implements EntryPoint {
-	/**
-	 * The message displayed to the user when the server cannot be reached or
-	 * returns an error.
-	 */
 	private static final String SERVER_ERROR = "An error occurred while "
 			+ "attempting to contact the server. Please check your network "
 			+ "connection and try again.";
 
-	/**
-	 * Create a remote service proxy to talk to the server-side Greeting
-	 * service.
-	 */
 	private final GreetingServiceAsync greetingService = GWT
 			.create(GreetingService.class);
 
-	/**
-	 * This is the entry point method.
-	 */
 	public void onModuleLoad() {
 		final StorageService ss = new StorageService();
+		final Lists lst = new Lists();
 		
 		final Button sendButton = new Button("Send");
 		final TextBox nameField = new TextBox();
@@ -66,10 +61,13 @@ public class ShoppingList implements EntryPoint {
 		final TextBox newListName = new TextBox();
 		final Button persistNewList = new Button("Dodaj");
 		final CellTable<Lists> table = new CellTable<Lists>();
-
-		final Label errorLabel = new Label();
-
-		// We can add style names to widgets
+		final Label addingProductLabel =  new  Label("Dodawanie produktu");
+		final TextBox listId =  new TextBox();
+		listId.setVisible(false);
+		table.setTitle("Historia list zakupów");
+		
+		nameField.addStyleName("Nazwa produktu");
+		quantity.addStyleName("Ilość");
 		sendButton.addStyleName("sendButton");
 		newList.addStyleName("sendButton");
 
@@ -80,21 +78,20 @@ public class ShoppingList implements EntryPoint {
 		addList.add(newListName);
 		addList.add(persistNewList);
 
-		addToList.add(errorLabel);
+		addToList.add(addingProductLabel);
 		addToList.add(quantity);
 		addToList.add(nameField);
 		addToList.add(sendButton);
-
+		addToList.add(listId);
+		
 		menuBar.add(viewAllLists);
 		menuBar.add(newList);
 
 		final SplitLayoutPanel p = new SplitLayoutPanel();
 		final FlowPanel center =  new FlowPanel();
-		// p.addWest(addToList, 0);
-		p.addNorth(menuBar, 100);
-		p.add(center);
-		// p.addSouth(addToList, 0);
 		
+		p.addNorth(menuBar, 100);
+		p.add(center);		
 
 		RootLayoutPanel rp = RootLayoutPanel.get();
 		rp.add(p);
@@ -119,6 +116,8 @@ public class ShoppingList implements EntryPoint {
 		table.addColumn(idColumn, "ID");
 		table.addColumn(nameColumn, "Name");
 		table.addColumn(creationDateColumn, "Data utworzenia");
+		
+		
 		
 		newList.addClickHandler(new ClickHandler() {
 			@Override
@@ -146,127 +145,48 @@ public class ShoppingList implements EntryPoint {
 				ListDataProvider<Lists> dataProvider = new ListDataProvider<Lists>();
 				dataProvider.addDataDisplay(table);
 				
-			    table.setRowData(0, ss.getAllLists());
-			    table.setTitle("Historia list zakupów");
-			    table.setRowCount(ss.getAllLists().size(), true);
-			    table.setVisibleRange(0, 20);
-			    
-			    SimplePager simplePager = new SimplePager(TextLocation.CENTER, true, 10, true);
-			    //simplePager.setPageSize(5);
+			    table.setRowData(0, ss.getAllLists());			    		    
+			    SimplePager simplePager = new SimplePager(TextLocation.CENTER);
 			    simplePager.setDisplay(table);
-			    center.add(table);				
-
+			    simplePager.setPageSize(10);
+			    center.add(table);
+			    center.add(simplePager);		
+			    
+			    final SingleSelectionModel<Lists> ssm = new SingleSelectionModel<Lists>();
+				table.setSelectionModel(ssm);
+				ssm.addSelectionChangeHandler(new Handler() {
+				    public void onSelectionChange(final SelectionChangeEvent event)
+				    {
+				        final Lists selectedObject = ssm.getSelectedObject();
+				        System.out.println(selectedObject.id);
+				        listId.setText(selectedObject.id.toString());
+				        center.add(addToList);
+				    }
+				});
 			}
 		});
-		// Create the popup dialog box
-		final DialogBox dialogBox = new DialogBox();
-		dialogBox.setText("Remote Procedure Call");
-		dialogBox.setAnimationEnabled(true);
-		final Button closeButton = new Button("Close");
-		// We can set the id of a widget by accessing its Element
-		closeButton.getElement().setId("closeButton");
-		final Label textToServerLabel = new Label();
-		final HTML serverResponseLabel = new HTML();
-		VerticalPanel dialogVPanel = new VerticalPanel();
-		dialogVPanel.addStyleName("dialogVPanel");
-		dialogVPanel.add(new HTML("<b>Sending name to the server:</b>"));
-		dialogVPanel.add(textToServerLabel);
-		dialogVPanel.add(new HTML("<br><b>Server replies:</b>"));
-		dialogVPanel.add(serverResponseLabel);
-		dialogVPanel.setHorizontalAlignment(VerticalPanel.ALIGN_RIGHT);
-		dialogVPanel.add(closeButton);
-		dialogBox.setWidget(dialogVPanel);
+		
+		
+			
+			
 
-		// Add a handler to close the DialogBox
-		closeButton.addClickHandler(new ClickHandler() {
+		sendButton.addClickHandler(new ClickHandler() {			
+			@Override
 			public void onClick(ClickEvent event) {
-				dialogBox.hide();
-				sendButton.setEnabled(true);
-				sendButton.setFocus(true);
+				Item item = new Item();
+				String name = nameField.getText();
+				Double quan = Double.parseDouble(quantity.getText());
+				item.id = lst.getAllItems().size()+1L;
+				item.name = name;
+				item.quantity = quan;
+				item.listId = Long.parseLong(listId.getText());
+				lst.addItemToList(item);
+				System.out.println(lst.getAllItems());
+				
+				
 			}
 		});
-
-		// Create a handler for the sendButton and nameField
-		class MyHandler implements ClickHandler, KeyUpHandler {
-			/**
-			 * Fired when the user clicks on the sendButton.
-			 */
-			public void onClick(ClickEvent event) {
-				sendNameToServer();
-			}
-
-			/**
-			 * Fired when the user types in the nameField.
-			 */
-			public void onKeyUp(KeyUpEvent event) {
-				if (event.getNativeKeyCode() == KeyCodes.KEY_ENTER) {
-					sendNameToServer();
-				}
-			}
-
-			/**
-			 * Send the name from the nameField to the server and wait for a
-			 * response.
-			 */
-			private void sendNameToServer() {
-				// First, we validate the input.
-				errorLabel.setText("");
-				String textToServer = nameField.getText();
-				if (!FieldVerifier.isValidName(textToServer)) {
-					errorLabel.setText("Please enter at least four characters");
-					return;
-				}
-
-				// Then, we send the input to the server.
-				sendButton.setEnabled(false);
-				textToServerLabel.setText(textToServer);
-				serverResponseLabel.setText("");
-				/*
-				 * greetingService.greetServer(textToServer, new
-				 * AsyncCallback<String>() { public void onFailure(Throwable
-				 * caught) { // Show the RPC error message to the user dialogBox
-				 * .setText("Remote Procedure Call - Failure");
-				 * serverResponseLabel
-				 * .addStyleName("serverResponseLabelError");
-				 * serverResponseLabel.setHTML(SERVER_ERROR);
-				 * dialogBox.center(); closeButton.setFocus(true); }
-				 * 
-				 * public void onSuccess(String result) {
-				 * dialogBox.setText("Remote Procedure Call");
-				 * serverResponseLabel
-				 * .removeStyleName("serverResponseLabelError");
-				 * serverResponseLabel.setHTML(result); dialogBox.center();
-				 * closeButton.setFocus(true); } });
-				 */
-				greetingService.addToShoppingList(textToServer,
-						Double.parseDouble(quantity.getText()),
-						new AsyncCallback<String>() {
-							public void onFailure(Throwable caught) {
-								// Show the RPC error message to the user
-								dialogBox
-										.setText("Remote Procedure Call - Failure");
-								serverResponseLabel
-										.addStyleName("serverResponseLabelError");
-								serverResponseLabel.setHTML(SERVER_ERROR);
-								dialogBox.center();
-								closeButton.setFocus(true);
-							}
-
-							public void onSuccess(String result) {
-								dialogBox.setText("Remote Procedure Call");
-								serverResponseLabel
-										.removeStyleName("serverResponseLabelError");
-								serverResponseLabel.setHTML(result);
-								dialogBox.center();
-								closeButton.setFocus(true);
-							}
-						});
-			}
-		}
-
-		// Add a handler to send the name to the server
-		MyHandler handler = new MyHandler();
-		sendButton.addClickHandler(handler);
-		nameField.addKeyUpHandler(handler);
+		
+		
 	}
 }

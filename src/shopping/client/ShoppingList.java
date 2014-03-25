@@ -9,18 +9,25 @@ import shopping.shared.Lists;
 import shopping.shared.StorageService;
 import sun.io.Converters;
 
+import com.google.gwt.cell.client.ButtonCell;
+import com.google.gwt.cell.client.FieldUpdater;
 import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
+import com.google.gwt.event.dom.client.DoubleClickEvent;
+import com.google.gwt.event.dom.client.FocusEvent;
+import com.google.gwt.event.dom.client.FocusHandler;
 import com.google.gwt.event.dom.client.KeyCodes;
 import com.google.gwt.event.dom.client.KeyUpEvent;
 import com.google.gwt.event.dom.client.KeyUpHandler;
 import com.google.gwt.i18n.shared.DateTimeFormat;
 import com.google.gwt.user.cellview.client.CellTable;
+import com.google.gwt.user.cellview.client.Column;
 import com.google.gwt.user.cellview.client.SimplePager;
 import com.google.gwt.user.cellview.client.TextColumn;
 import com.google.gwt.user.cellview.client.SimplePager.TextLocation;
+import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.DialogBox;
@@ -52,7 +59,7 @@ public class ShoppingList implements EntryPoint {
 	public void onModuleLoad() {
 		final StorageService ss = new StorageService();
 		final Lists lst = new Lists();
-		
+
 		final Button sendButton = new Button("Send");
 		final TextBox nameField = new TextBox();
 		final TextBox quantity = new TextBox();
@@ -61,13 +68,14 @@ public class ShoppingList implements EntryPoint {
 		final TextBox newListName = new TextBox();
 		final Button persistNewList = new Button("Dodaj");
 		final CellTable<Lists> table = new CellTable<Lists>();
-		final Label addingProductLabel =  new  Label("Dodawanie produktu");
-		final TextBox listId =  new TextBox();
+		final CellTable<Item> items = new CellTable<Item>();
+		final Label addingProductLabel = new Label("Dodawanie produktu");
+		final TextBox listId = new TextBox();
 		listId.setVisible(false);
 		table.setTitle("Historia list zakupów");
-		
-		nameField.addStyleName("Nazwa produktu");
-		quantity.addStyleName("Ilość");
+
+		nameField.setText("Nazwa produktu");
+		quantity.setText("Ilość");
 		sendButton.addStyleName("sendButton");
 		newList.addStyleName("sendButton");
 
@@ -83,18 +91,19 @@ public class ShoppingList implements EntryPoint {
 		addToList.add(nameField);
 		addToList.add(sendButton);
 		addToList.add(listId);
-		
+
 		menuBar.add(viewAllLists);
 		menuBar.add(newList);
 
 		final SplitLayoutPanel p = new SplitLayoutPanel();
-		final FlowPanel center =  new FlowPanel();
-		
+		final FlowPanel center = new FlowPanel();
+
 		p.addNorth(menuBar, 100);
-		p.add(center);		
+		p.add(center);
 
 		RootLayoutPanel rp = RootLayoutPanel.get();
 		rp.add(p);
+		
 		TextColumn<Lists> nameColumn = new TextColumn<Lists>() {
 			@Override
 			public String getValue(Lists lists) {
@@ -113,12 +122,57 @@ public class ShoppingList implements EntryPoint {
 				return lists.id.toString();
 			}
 		};
+		ButtonCell addToListButton = new ButtonCell();
+		Column<Lists, String> preview = new Column<Lists, String>(
+				addToListButton) {
+			public String getValue(Lists object) {
+				return "Dodaj do listy";
+			}
+		};
+		ButtonCell showDetailedList = new ButtonCell();
+		Column<Lists, String> dl = new Column<Lists, String>(showDetailedList) {
+			public String getValue(Lists object) {
+				return "Pokaż listę";
+			}
+		};
+		preview.setFieldUpdater(new FieldUpdater<Lists, String>() {
+			@Override
+			public void update(int index, Lists object, String value) {
+				center.remove(addToList);
+				listId.setText(object.id.toString());
+				center.add(addToList);
+			}
+		});
+		dl.setFieldUpdater(new FieldUpdater<Lists, String>() {
+			@Override
+			public void update(int index, Lists object, String value) {
+				center.remove(addToList);
+				lst.getItemsFromList(object.id);
+				System.out.println("bangla");
+				// center.add(addToList);
+			}
+		});
+
 		table.addColumn(idColumn, "ID");
 		table.addColumn(nameColumn, "Name");
 		table.addColumn(creationDateColumn, "Data utworzenia");
+		table.addColumn(preview);
+		table.addColumn(dl);
+
+		TextColumn<Item> itemName = new TextColumn<Item>() {
+			@Override
+			public String getValue(Item lists) {
+				return lists.name;
+			}
+		};
+		/*TextColumn<Lists> creationDateColum1n = new TextColumn<Lists>() {
+			@Override
+			public String getValue(Lists lists) {
+				return lists.creationDate;
+			}
+		};*/
 		
-		
-		
+
 		newList.addClickHandler(new ClickHandler() {
 			@Override
 			public void onClick(ClickEvent event) {
@@ -128,65 +182,61 @@ public class ShoppingList implements EntryPoint {
 		});
 		persistNewList.addClickHandler(new ClickHandler() {
 			@Override
-			public void onClick(ClickEvent event) {	
+			public void onClick(ClickEvent event) {
 				Lists sl = new Lists();
 				Date date = new Date();
-				sl.id = ss.getAllLists().size()+1L;
+				sl.id = ss.getAllLists().size() + 1L;
 				sl.creationDate = date.toString();
 				sl.name = newListName.getText();
-				ss.addList(sl);				
+				ss.addList(sl);
 			}
 		});
 
-		viewAllLists.addClickHandler(new ClickHandler() {			
-			@Override
-			public void onClick(ClickEvent event) {				
-				center.clear();				
-				ListDataProvider<Lists> dataProvider = new ListDataProvider<Lists>();
-				dataProvider.addDataDisplay(table);
-				
-			    table.setRowData(0, ss.getAllLists());			    		    
-			    SimplePager simplePager = new SimplePager(TextLocation.CENTER);
-			    simplePager.setDisplay(table);
-			    simplePager.setPageSize(10);
-			    center.add(table);
-			    center.add(simplePager);		
-			    
-			    final SingleSelectionModel<Lists> ssm = new SingleSelectionModel<Lists>();
-				table.setSelectionModel(ssm);
-				ssm.addSelectionChangeHandler(new Handler() {
-				    public void onSelectionChange(final SelectionChangeEvent event)
-				    {
-				        final Lists selectedObject = ssm.getSelectedObject();
-				        System.out.println(selectedObject.id);
-				        listId.setText(selectedObject.id.toString());
-				        center.add(addToList);
-				    }
-				});
-			}
-		});
-		
-		
-			
-			
-
-		sendButton.addClickHandler(new ClickHandler() {			
+		viewAllLists.addClickHandler(new ClickHandler() {
 			@Override
 			public void onClick(ClickEvent event) {
+				center.clear();
+				ListDataProvider<Lists> dataProvider = new ListDataProvider<Lists>();
+				dataProvider.addDataDisplay(table);
+
+				table.setRowData(0, ss.getAllLists());
+				SimplePager simplePager = new SimplePager(TextLocation.CENTER);
+				simplePager.setDisplay(table);
+				simplePager.setPageSize(10);
+				center.add(table);
+				center.add(simplePager);
+
+			}
+
+		});
+
+		sendButton.addClickHandler(new ClickHandler() {
+			@Override
+			public void onClick(ClickEvent event) {
+
 				Item item = new Item();
 				String name = nameField.getText();
 				Double quan = Double.parseDouble(quantity.getText());
-				item.id = lst.getAllItems().size()+1L;
+				item.id = lst.getAllItems().size() + 1L;
 				item.name = name;
 				item.quantity = quan;
 				item.listId = Long.parseLong(listId.getText());
 				lst.addItemToList(item);
 				System.out.println(lst.getAllItems());
-				
-				
 			}
 		});
-		
-		
+
+		nameField.addFocusHandler(new FocusHandler() {
+			@Override
+			public void onFocus(FocusEvent event) {
+				nameField.setText("");
+			}
+		});
+		quantity.addFocusHandler(new FocusHandler() {
+			@Override
+			public void onFocus(FocusEvent event) {
+				quantity.setText("");
+			}
+		});
 	}
 }

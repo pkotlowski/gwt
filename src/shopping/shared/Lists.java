@@ -2,6 +2,7 @@ package shopping.shared;
 
 import java.util.ArrayList;
 import java.util.List;
+import shopping.shared.Item;
 
 public class Lists {
 	public Long id;
@@ -17,15 +18,31 @@ public class Lists {
 		System.out.println(item.id+" "+item.listId);
 	}
 	
+	public List<Item> getAllItemsList() {
+		return itemList;
+	}
+	public List getItemsFromList(Long listId){
+		List<Item> result = new ArrayList<Item>();
+		for (Item x : itemList) {
+			if(x.listId == listId){
+				result.add(x);
+			}
+		}
+		return result;
+	}
+	
+	/*Getters and setters*/
+	
+	public Long getId() {
+		return id;
+	}
+
+	
 	public List<Item> getItemList() {
 		return itemList;
 	}
-	/*Getters and setters*/
 	public void setItemList(List<Item> itemList) {
 		this.itemList = itemList;
-	}
-	public Long getId() {
-		return id;
 	}
 	public void setId(Long id) {
 		this.id = id;

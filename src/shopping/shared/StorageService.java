@@ -6,21 +6,23 @@ import java.util.List;
 public class StorageService {
 
 	public List<Lists> db = new ArrayList<Lists>();
-	
-	public void addList(Lists sl){
+
+	public void addList(Lists sl) {
 		db.add(sl);
-		System.out.println("Dodano "+ sl.id+" "+sl.name+" "+sl.creationDate);
-		
+		// System.out.println("Dodano "+ sl.id+" "+sl.name+" "+sl.creationDate);
 	}
-	
-	public List getAllLists(){
-		System.out.println("XXX "+db.size());
+
+	public List getAllLists() {
+		//System.out.println("XXX " + db.size());
 		return db;
 	}
-	public void modifyList(Lists lists){
+
+	public void modifyList(Lists lists) {
 		Lists tmpList = lists;
 		db.remove(lists);
 		tmpList.itemList.add(null);
 	}
 	
+	
+
 }

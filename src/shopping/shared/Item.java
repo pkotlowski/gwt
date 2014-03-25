@@ -5,7 +5,14 @@ public class Item {
 	public Long listId;
 	public String name;
 	public Double quantity;
+	public Boolean isBought;
 	
+	public Boolean getIsBought() {
+		return isBought;
+	}
+	public void setIsBought(Boolean isBought) {
+		this.isBought = isBought;
+	}
 	public Long getListId() {
 		return listId;
 	}

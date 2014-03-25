@@ -1,7 +1,5 @@
 package shopping.client;
 
-import shopping.shared.Lists;
-
 import com.google.gwt.user.client.rpc.RemoteService;
 import com.google.gwt.user.client.rpc.RemoteServiceRelativePath;
 

@@ -1,16 +1,7 @@
 package shopping.server;
 
-import java.awt.List;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-
-import org.apache.james.mime4j.field.datetime.DateTime;
-
 import shopping.client.GreetingService;
 import shopping.shared.FieldVerifier;
-import shopping.shared.Lists;
-import shopping.shared.StorageService;
 
 import com.google.gwt.user.server.rpc.RemoteServiceServlet;
 

@@ -26,6 +26,12 @@ public class StorageService {
 		tmpList.itemList.add(null);
 	}
 	
+	public void removeList(Lists ls){
+		System.out.println(db.size());
+		db.remove(ls);
+		System.out.println(db.size());
+	}
+	
 	
 
 }

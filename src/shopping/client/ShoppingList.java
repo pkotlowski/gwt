@@ -1,60 +1,36 @@
 package shopping.client;
 
-import java.awt.List;
-import java.text.DateFormat;
 import java.util.Date;
 
-import shopping.shared.FieldVerifier;
 import shopping.shared.Item;
 import shopping.shared.Lists;
 import shopping.shared.StorageService;
-import sun.io.Converters;
 
 import com.google.gwt.cell.client.ButtonCell;
+import com.google.gwt.cell.client.CheckboxCell;
 import com.google.gwt.cell.client.FieldUpdater;
 import com.google.gwt.core.client.EntryPoint;
-import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
-import com.google.gwt.event.dom.client.DoubleClickEvent;
 import com.google.gwt.event.dom.client.FocusEvent;
 import com.google.gwt.event.dom.client.FocusHandler;
-import com.google.gwt.event.dom.client.KeyCodes;
-import com.google.gwt.event.dom.client.KeyUpEvent;
-import com.google.gwt.event.dom.client.KeyUpHandler;
-import com.google.gwt.i18n.shared.DateTimeFormat;
 import com.google.gwt.user.cellview.client.CellTable;
 import com.google.gwt.user.cellview.client.Column;
 import com.google.gwt.user.cellview.client.SimplePager;
-import com.google.gwt.user.cellview.client.TextColumn;
 import com.google.gwt.user.cellview.client.SimplePager.TextLocation;
-import com.google.gwt.user.client.Window;
-import com.google.gwt.user.client.rpc.AsyncCallback;
+import com.google.gwt.user.cellview.client.TextColumn;
 import com.google.gwt.user.client.ui.Button;
-import com.google.gwt.user.client.ui.DialogBox;
 import com.google.gwt.user.client.ui.FlowPanel;
-import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.Label;
+import com.google.gwt.user.client.ui.PopupPanel;
+import com.google.gwt.user.client.ui.PushButton;
 import com.google.gwt.user.client.ui.RootLayoutPanel;
 import com.google.gwt.user.client.ui.SplitLayoutPanel;
 import com.google.gwt.user.client.ui.TextBox;
-import com.google.gwt.user.client.ui.VerticalPanel;
 import com.google.gwt.view.client.ListDataProvider;
-import com.google.gwt.view.client.SelectionChangeEvent;
-import com.google.gwt.view.client.SelectionChangeEvent.Handler;
-import com.google.gwt.view.client.SelectionModel;
-import com.google.gwt.view.client.SingleSelectionModel;
-import com.ibm.icu.text.SimpleDateFormat;
 
-/**
- * Entry point classes define <code>onModuleLoad()</code>.
- */
 public class ShoppingList implements EntryPoint {
-	private static final String SERVER_ERROR = "An error occurred while "
-			+ "attempting to contact the server. Please check your network "
-			+ "connection and try again.";
 
-	
 	public void onModuleLoad() {
 		final StorageService ss = new StorageService();
 		final Lists lst = new Lists();
@@ -68,11 +44,12 @@ public class ShoppingList implements EntryPoint {
 		final Button persistNewList = new Button("Dodaj");
 		final CellTable<Lists> table = new CellTable<Lists>();
 		final CellTable<Item> items = new CellTable<Item>();
-		final Label addingProductLabel = new Label("Dodawanie produktu");
+
 		final TextBox listId = new TextBox();
+		final Label productTableHeader = new Label();
 		listId.setVisible(false);
 		table.setTitle("Historia list zakupów");
-
+		
 		nameField.setText("Nazwa produktu");
 		quantity.setText("Ilość");
 		addItemToListButton.addStyleName("sendButton");
@@ -85,7 +62,7 @@ public class ShoppingList implements EntryPoint {
 		addList.add(newListName);
 		addList.add(persistNewList);
 
-		addToList.add(addingProductLabel);
+		addToList.add(productTableHeader);
 		addToList.add(quantity);
 		addToList.add(nameField);
 		addToList.add(addItemToListButton);
@@ -103,6 +80,12 @@ public class ShoppingList implements EntryPoint {
 		RootLayoutPanel rp = RootLayoutPanel.get();
 		rp.add(p);
 		
+		final PopupPanel popup = new PopupPanel(true);
+	    popup.setStyleName("demo-PopUpPanel");
+	    //PopUpPanelContents = new VerticalPanel();
+	    popup.add(new Label("dodano"));
+	    popup.center();
+
 		TextColumn<Lists> nameColumn = new TextColumn<Lists>() {
 			@Override
 			public String getValue(Lists lists) {
@@ -133,27 +116,49 @@ public class ShoppingList implements EntryPoint {
 			public void update(int index, Lists object, String value) {
 				center.remove(addToList);
 				listId.setText(object.id.toString());
+				productTableHeader.setText("Dodawanie do listy numer "
+						+ listId.getText());
 				center.add(addToList);
 			}
 		});
-		
+
 		ButtonCell showDetailedList = new ButtonCell();
 		Column<Lists, String> dl = new Column<Lists, String>(showDetailedList) {
 			public String getValue(Lists object) {
 				return "Pokaż listę";
 			}
 		};
-		
+
 		dl.setFieldUpdater(new FieldUpdater<Lists, String>() {
 			@Override
 			public void update(int index, Lists object, String value) {
 				ListDataProvider<Item> dataProvider = new ListDataProvider<Item>();
 				dataProvider.addDataDisplay(items);
-				System.out.println("SSSS "+lst.getAllItemsList().size());
-				items.setRowData(0, lst.getAllItemsList());
-				//lst.getItemsFromList(object.id);
-				//System.out.println("bangla");
+
+				listId.setText(object.id.toString());
+				items.setRowData(0,
+						lst.getAllItemsList(Long.valueOf((listId.getText()))));
+
 				center.add(items);
+			}
+		});
+		
+		PushButton removeFromListButton = new PushButton("indeks.jpeg");
+		Column<Lists, String> remove = new Column<Lists, String>(
+				addToListButton) {
+			public String getValue(Lists object) {
+				return "Usuń";
+			}
+		};
+		remove.setFieldUpdater(new FieldUpdater<Lists, String>() {
+			@Override
+			public void update(int index, Lists object, String value) {
+				//center.clear();
+				ss.removeList(object);
+				//center.remove(table);
+				//center.add(table);
+				table.redraw();
+				
 			}
 		});
 
@@ -162,6 +167,7 @@ public class ShoppingList implements EntryPoint {
 		table.addColumn(creationDateColumn, "Data utworzenia");
 		table.addColumn(preview);
 		table.addColumn(dl);
+		table.addColumn(remove);
 
 		TextColumn<Item> itemName = new TextColumn<Item>() {
 			@Override
@@ -175,9 +181,26 @@ public class ShoppingList implements EntryPoint {
 				return item.quantity.toString();
 			}
 		};
-		items.addColumn(itemName,"nazwa");
-		items.addColumn(quantityColumn, "ilość");
 
+		final CheckboxCell cbCell = new CheckboxCell();
+		Column<Item, Boolean> cbColumn = new Column<Item, Boolean>(cbCell) {
+			@Override
+			public Boolean getValue(Item object) {
+				return object.isBought;
+			}
+		};
+		cbColumn.setFieldUpdater(new FieldUpdater<Item, Boolean>() {
+			@Override
+			public void update(int index, Item object, Boolean value) {
+				lst.productBought(object.id, value);
+				center.add(items);
+			}
+
+		});
+
+		items.addColumn(itemName, "nazwa");
+		items.addColumn(quantityColumn, "ilość");
+		items.addColumn(cbColumn, "Kupione");
 		newList.addClickHandler(new ClickHandler() {
 			@Override
 			public void onClick(ClickEvent event) {
@@ -196,29 +219,25 @@ public class ShoppingList implements EntryPoint {
 				ss.addList(sl);
 			}
 		});
-
+		
 		viewAllLists.addClickHandler(new ClickHandler() {
 			@Override
 			public void onClick(ClickEvent event) {
 				center.clear();
 				ListDataProvider<Lists> dataProvider = new ListDataProvider<Lists>();
 				dataProvider.addDataDisplay(table);
-
 				table.setRowData(0, ss.getAllLists());
 				SimplePager simplePager = new SimplePager(TextLocation.CENTER);
 				simplePager.setDisplay(table);
 				simplePager.setPageSize(10);
 				center.add(table);
 				center.add(simplePager);
-
 			}
-
 		});
-
+		/* Dodawanie produktu */
 		addItemToListButton.addClickHandler(new ClickHandler() {
 			@Override
 			public void onClick(ClickEvent event) {
-
 				Item item = new Item();
 				String name = nameField.getText();
 				Double quan = Double.parseDouble(quantity.getText());
@@ -226,11 +245,16 @@ public class ShoppingList implements EntryPoint {
 				item.name = name;
 				item.quantity = quan;
 				item.listId = Long.parseLong(listId.getText());
+				item.isBought = false;
 				lst.addItemToList(item);
-				//System.out.println(lst.getAllItems());
+				center.remove(addToList);
+				popup.show();
 			}
 		});
-		/*Akcje po kliknieciu na textboxy do wprowadzania produktu*/
+		
+		
+		
+		/* Akcje po kliknieciu na textboxy do wprowadzania produktu */
 		nameField.addFocusHandler(new FocusHandler() {
 			@Override
 			public void onFocus(FocusEvent event) {

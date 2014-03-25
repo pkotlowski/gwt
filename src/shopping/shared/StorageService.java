@@ -12,9 +12,12 @@ public class StorageService {
 		// System.out.println("Dodano "+ sl.id+" "+sl.name+" "+sl.creationDate);
 	}
 
-	public List getAllLists() {
+	public List<Lists> getAllLists() {
 		//System.out.println("XXX " + db.size());
 		return db;
+	}
+	public List<Item> getAllItems(){
+		return db.get(0).itemList;
 	}
 
 	public void modifyList(Lists lists) {

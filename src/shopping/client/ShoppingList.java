@@ -1,5 +1,6 @@
 package shopping.client;
 
+import java.awt.List;
 import java.text.DateFormat;
 import java.util.Date;
 
@@ -53,14 +54,12 @@ public class ShoppingList implements EntryPoint {
 			+ "attempting to contact the server. Please check your network "
 			+ "connection and try again.";
 
-	private final GreetingServiceAsync greetingService = GWT
-			.create(GreetingService.class);
-
+	
 	public void onModuleLoad() {
 		final StorageService ss = new StorageService();
 		final Lists lst = new Lists();
 
-		final Button sendButton = new Button("Send");
+		final Button addItemToListButton = new Button("Send");
 		final TextBox nameField = new TextBox();
 		final TextBox quantity = new TextBox();
 		final Button newList = new Button("Nowa lista zakupów");
@@ -76,7 +75,7 @@ public class ShoppingList implements EntryPoint {
 
 		nameField.setText("Nazwa produktu");
 		quantity.setText("Ilość");
-		sendButton.addStyleName("sendButton");
+		addItemToListButton.addStyleName("sendButton");
 		newList.addStyleName("sendButton");
 
 		final FlowPanel addList = new FlowPanel();
@@ -89,7 +88,7 @@ public class ShoppingList implements EntryPoint {
 		addToList.add(addingProductLabel);
 		addToList.add(quantity);
 		addToList.add(nameField);
-		addToList.add(sendButton);
+		addToList.add(addItemToListButton);
 		addToList.add(listId);
 
 		menuBar.add(viewAllLists);
@@ -129,12 +128,6 @@ public class ShoppingList implements EntryPoint {
 				return "Dodaj do listy";
 			}
 		};
-		ButtonCell showDetailedList = new ButtonCell();
-		Column<Lists, String> dl = new Column<Lists, String>(showDetailedList) {
-			public String getValue(Lists object) {
-				return "Pokaż listę";
-			}
-		};
 		preview.setFieldUpdater(new FieldUpdater<Lists, String>() {
 			@Override
 			public void update(int index, Lists object, String value) {
@@ -143,13 +136,24 @@ public class ShoppingList implements EntryPoint {
 				center.add(addToList);
 			}
 		});
+		
+		ButtonCell showDetailedList = new ButtonCell();
+		Column<Lists, String> dl = new Column<Lists, String>(showDetailedList) {
+			public String getValue(Lists object) {
+				return "Pokaż listę";
+			}
+		};
+		
 		dl.setFieldUpdater(new FieldUpdater<Lists, String>() {
 			@Override
 			public void update(int index, Lists object, String value) {
-				center.remove(addToList);
-				lst.getItemsFromList(object.id);
-				System.out.println("bangla");
-				// center.add(addToList);
+				ListDataProvider<Item> dataProvider = new ListDataProvider<Item>();
+				dataProvider.addDataDisplay(items);
+				System.out.println("SSSS "+lst.getAllItemsList().size());
+				items.setRowData(0, lst.getAllItemsList());
+				//lst.getItemsFromList(object.id);
+				//System.out.println("bangla");
+				center.add(items);
 			}
 		});
 
@@ -161,17 +165,18 @@ public class ShoppingList implements EntryPoint {
 
 		TextColumn<Item> itemName = new TextColumn<Item>() {
 			@Override
-			public String getValue(Item lists) {
-				return lists.name;
+			public String getValue(Item item) {
+				return item.name;
 			}
 		};
-		/*TextColumn<Lists> creationDateColum1n = new TextColumn<Lists>() {
+		TextColumn<Item> quantityColumn = new TextColumn<Item>() {
 			@Override
-			public String getValue(Lists lists) {
-				return lists.creationDate;
+			public String getValue(Item item) {
+				return item.quantity.toString();
 			}
-		};*/
-		
+		};
+		items.addColumn(itemName,"nazwa");
+		items.addColumn(quantityColumn, "ilość");
 
 		newList.addClickHandler(new ClickHandler() {
 			@Override
@@ -210,7 +215,7 @@ public class ShoppingList implements EntryPoint {
 
 		});
 
-		sendButton.addClickHandler(new ClickHandler() {
+		addItemToListButton.addClickHandler(new ClickHandler() {
 			@Override
 			public void onClick(ClickEvent event) {
 
@@ -222,10 +227,10 @@ public class ShoppingList implements EntryPoint {
 				item.quantity = quan;
 				item.listId = Long.parseLong(listId.getText());
 				lst.addItemToList(item);
-				System.out.println(lst.getAllItems());
+				//System.out.println(lst.getAllItems());
 			}
 		});
-
+		/*Akcje po kliknieciu na textboxy do wprowadzania produktu*/
 		nameField.addFocusHandler(new FocusHandler() {
 			@Override
 			public void onFocus(FocusEvent event) {

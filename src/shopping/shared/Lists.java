@@ -15,21 +15,13 @@ public class Lists {
 	}
 	public void addItemToList(Item item){
 		itemList.add(item);
-		System.out.println(item.id+" "+item.listId);
+		System.out.println(item.id+" "+item.listId+" "+item.name);
 	}
 	
 	public List<Item> getAllItemsList() {
 		return itemList;
 	}
-	public List getItemsFromList(Long listId){
-		List<Item> result = new ArrayList<Item>();
-		for (Item x : itemList) {
-			if(x.listId == listId){
-				result.add(x);
-			}
-		}
-		return result;
-	}
+
 	
 	/*Getters and setters*/
 	

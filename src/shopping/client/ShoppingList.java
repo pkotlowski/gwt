@@ -81,10 +81,12 @@ public class ShoppingList implements EntryPoint {
 		rp.add(p);
 		
 		final PopupPanel popup = new PopupPanel(true);
-	    popup.setStyleName("demo-PopUpPanel");
-	    //PopUpPanelContents = new VerticalPanel();
+	    popup.setStyleName("demo-PopUpPanel");	    
 	    popup.add(new Label("dodano"));
-	    popup.center();
+	    
+	    final SimplePager simplePager = new SimplePager(TextLocation.CENTER);
+		simplePager.setDisplay(table);
+		simplePager.setPageSize(10);
 
 		TextColumn<Lists> nameColumn = new TextColumn<Lists>() {
 			@Override
@@ -153,11 +155,13 @@ public class ShoppingList implements EntryPoint {
 		remove.setFieldUpdater(new FieldUpdater<Lists, String>() {
 			@Override
 			public void update(int index, Lists object, String value) {
-				//center.clear();
+				center.clear();
 				ss.removeList(object);
-				//center.remove(table);
-				//center.add(table);
-				table.redraw();
+				ListDataProvider<Lists> dataProvider = new ListDataProvider<Lists>();
+				dataProvider.addDataDisplay(table);
+				table.setRowData(0, ss.getAllLists());
+				center.add(table);
+				center.add(simplePager);
 				
 			}
 		});
@@ -226,10 +230,7 @@ public class ShoppingList implements EntryPoint {
 				center.clear();
 				ListDataProvider<Lists> dataProvider = new ListDataProvider<Lists>();
 				dataProvider.addDataDisplay(table);
-				table.setRowData(0, ss.getAllLists());
-				SimplePager simplePager = new SimplePager(TextLocation.CENTER);
-				simplePager.setDisplay(table);
-				simplePager.setPageSize(10);
+				table.setRowData(0, ss.getAllLists());				
 				center.add(table);
 				center.add(simplePager);
 			}
@@ -248,7 +249,7 @@ public class ShoppingList implements EntryPoint {
 				item.isBought = false;
 				lst.addItemToList(item);
 				center.remove(addToList);
-				popup.show();
+				popup.center();
 			}
 		});
 		
